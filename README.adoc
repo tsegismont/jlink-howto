@@ -46,6 +46,7 @@ ifndef::env-github[]
 ----
 include::src/main/java/io/vertx/howtos/jlink/ServerVerticle.java[]
 ----
+endif::env-github[]
 
 A custom application launcher takes care of deploying the main verticle:
 
@@ -57,6 +58,7 @@ ifndef::env-github[]
 ----
 include::src/main/java/io/vertx/howtos/jlink/CustomLauncher.java[]
 ----
+endif::env-github[]
 
 Having the verticle instance supplied programmatically in `io.vertx.howtos.jlink.CustomLauncher` simplifies the Java module configuration:
 
@@ -68,6 +70,7 @@ ifndef::env-github[]
 ----
 include::src/main/java/module-info.java[]
 ----
+endif::env-github[]
 
 Indeed, we don't have to export our application package to the `io.vertx.core` module, we just have to declare a few required modules.
 
