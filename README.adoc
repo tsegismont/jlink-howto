@@ -1,160 +1,177 @@
-= Template and instructions for the Eclipse Vert.x how-tos
-:author: Julien Ponge <julien.ponge@gmail.com>
-:toc:
-
-This repository can be cloned and used as a basis for creating a new Eclipse Vert.x how-to.
-It especially contains the https://jekyllrb.com/[Jekyll] and continuous integration configurations for publishing a how-to as a web page.
-
-== Conventions
-
-Each how-to is a self-contained Git repository of the https://github.com/vertx-howtos[corresponding organisation on GitHub].
-
-The how-to document is written using the https://asciidoctor.org/docs/what-is-asciidoc/[Asciidoc] text format in a file called `README.adoc` at the root of the Git repository.
-
-The accompanying source code is directly at the root of the Git repository.
-For instance a Maven `pom.xml` is co-located with `README.adoc` at the root of the repository.
-
-Projects should preferably have both Maven and Gradle build descriptors.
-An author who doesn't have knowledge of either of the tools can always ask for contributions.
-
-== Structure of a how-to
-
-A how-to is not a guide or a mini-book: it must be as concise as possible.
-
-In practice this means that each how-to must focus on a very narrow topic.
-It also means that the text must not deviate from the topic, and that the chosen example must be as simple as possible.
-
-The structure of a how-to must be as follows.
-
-=== What you will build
-
-- Explain the example scenario from a functional point of view.
-- Explain what the user can see when running the example.
-- Highlight the different pieces of code to be written and how they fit together.
-
-=== What you need
-
-- List all required tools to edit, build and run the how-to.
-- Do not hesitate to point to third-party resources (e.g., if you need Docker, say why you need it and point to its installation documentation).
-
-=== Create a project
-
-- Explain how to create the project.
-- Show the Maven / Gradle build descriptors.
-- For any third-party tool (e.g., running a database with Docker), also have a subsection to explain this.
-
-=== Implementation sections
-
-- Make one or multiple sections to show the implementation.
-- Make use of Asciidoc source code comments to highlight specific parts of the code.
-- The code must be included using https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#source-code[Asciidoc directives]. Remember that you can include fragments of code by using delimiter tags.
-
-=== Running the application
-
-- Always show the various options to run the application.
-
-=== Summary
-
-- Briefly recapitulate what was covered and learned in the how-to.
-
-=== See also
-
-- If possible, link to other how-tos.
-- If judicious, link to Vert.x or third-party documentation.
-
-== How is the website being rendered?
-
-The website is being rendered using Jekyll and the Asciidoctor extension for Jekyll.
-
-There is a https://github.com/vertx-howtos/vertx-howtos-jekyll-theme[Jekyll theme] published as a Ruby Gem, so every how-to uses a common theme.
-
-=== Asciidoctor attributes
-
-The common theme depends on the following attributes to be set right below the title header:
-
-[source,text]
-----
-= My awesome how-to
+= Assembling a custom runtime image with jlink
 :page-permalink: /
-:page-github: vertx-howtos/my-howto
+:page-github: vertx-howtos/jlink-howto
+
+ifdef::env-github[]
+image:https://github.com/vertx-howtos/jlink-howto/workflows/Publish%20the%20how-to/badge.svg["Build Status",link="https://github.com/vertx-howtos/jlink-howto/actions?query=workflow%3A%22Publish+the+how-to%22"]
+endif::env-github[]
+
+This document will show you how to assemble a custom runtime image with jlink and Maven.
+
+== What you need
+
+* A text editor or an IDE
+* Java 11 or higher
+
+== Create a project
+
+Here is the content of the `pom.xml` file you should be using:
+
+ifdef::env-github[]
+link:pom.xml[Maven POM file]
+endif::env-github[]
+ifndef::env-github[]
+[source,xml]
+.Maven `pom.xml`
+----
+include::pom.xml[]
 ----
 
-The `page-permalink` attribute ensures that `README.adoc` is rendered as `index.html` rather than `README.adoc`.
+<1> The https://maven.apache.org/plugins/maven-jlink-plugin/[Apache Maven JLink Plugin] will take care of invoking the `jlink` command-line tool.
+<2> Mandatory classifier for the custom runtime image archive that will be attached as a Maven artifact.
+<3> `server` is the name of the launcher script to generate via jlink.
+This is optional.
+<4> Add the `jdk.jdwp.agent` module so that we can attach a remote debugger, if we need to.
+endif::env-github[]
 
-The `page-github` attribute must contain the joint GitHub organization and repository so it can properly link to the GitHub repository, provide a direct edition link, and more.
+== Implementing the application
 
-=== Jekyll configuration
+The server setup code fits into a single class, `io.vertx.howtos.jlink.ServerVerticle`:
 
-The Jekyll configuration shall not have to be tweaked much, here is the basic configuration that we use:
-
-[source,yaml]
+ifdef::env-github[]
+link:src/main/java/io/vertx/howtos/jlink/ServerVerticle.java[ServerVerticle.java]
+endif::env-github[]
+ifndef::env-github[]
+[source,java]
 ----
-include::_config.yml[]
-----
-
-TIP: When running Jekyll, check the content of the `_site/` folder and adapt the `exclude` items to avoid pushing unnecessary content to the website.
-
-=== Ruby environment
-
-It is strongly recommended to use either https://github.com/rbenv/rbenv[rbenv] or https://rvm.io/[RVM] for your Ruby installation.
-
-You will need https://bundler.io/[Bundler] to install all required dependencies:
-
-----
-$ gem install bundler
+include::src/main/java/io/vertx/howtos/jlink/ServerVerticle.java[]
 ----
 
-You can then let _Bundler_ do the installation work:
+A custom application launcher takes care of deploying the main verticle:
 
+ifdef::env-github[]
+link:src/main/java/io/vertx/howtos/jlink/CustomLauncher.java[CustomLauncher.java]
+endif::env-github[]
+ifndef::env-github[]
+[source,java]
 ----
-$ bundle install
-----
-
-From time to time you may also update dependencies:
-
-----
-$ bundle update
-----
-
-The dependencies are specified in the `Gemfile` file:
-
-[source,ruby]
-----
-include::Gemfile[]
+include::src/main/java/io/vertx/howtos/jlink/CustomLauncher.java[]
 ----
 
-TIP: Keep the `vertx-howtos-jekyll-theme` dependency up-to-date!
+Having the verticle instance supplied programmatically in `io.vertx.howtos.jlink.CustomLauncher` simplifies the Java module configuration:
 
-=== Running Jekyll
+ifdef::env-github[]
+link:src/main/java/module-info.java[module-info.java]
+endif::env-github[]
+ifndef::env-github[]
+[source,java]
+----
+include::src/main/java/module-info.java[]
+----
 
-You can run Jekyll with a full auto-reload experience:
+Indeed, we don't have to export our application package to the `io.vertx.core` module, we just have to declare a few required modules.
+
+== Building the application
+
+On Linux or other Unix-like systems, run the following command:
+
+[source,bash]
+----
+./mvnw clean package
+----
+
+On Microsof Windows:
+
+[source,shell]
+----
+mvnw.cmd clean package
+----
+
+Notice that all required modules are resolved before `jlink` creates the custom runtime image.
 
 ----
-$ bundle exec jekyll server --watch --livereload
+[INFO] --- jlink:3.2.0:jlink (jlink) @ jlink-howto ---
+[INFO]  -> module: io.netty.handler ( /path/to/my/mavenrepo/io/netty/netty-handler/4.2.0.RC1/netty-handler-4.2.0.RC1.jar )
+[INFO]  -> module: io.vertx.web ( /path/to/my/mavenrepo/io/vertx/vertx-web/5.0.0.CR4/vertx-web-5.0.0.CR4.jar )
+[INFO]  -> module: io.vertx.core ( /path/to/my/mavenrepo/io/vertx/vertx-core/5.0.0.CR4/vertx-core-5.0.0.CR4.jar )
+[INFO]  -> module: io.netty.handler.proxy ( /path/to/my/mavenrepo/io/netty/netty-handler-proxy/4.2.0.RC1/netty-handler-proxy-4.2.0.RC1.jar )
+[INFO]  -> module: com.fasterxml.jackson.core ( /path/to/my/mavenrepo/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar )
+[INFO]  -> module: io.netty.codec.unused ( /path/to/my/mavenrepo/io/netty/netty-codec/4.2.0.RC1/netty-codec-4.2.0.RC1.jar )
+[INFO]  -> module: io.vertx.launcher.application ( /path/to/my/mavenrepo/io/vertx/vertx-launcher-application/5.0.0.CR4/vertx-launcher-application-5.0.0.CR4.jar )
+[INFO]  -> module: io.vertx.auth.common ( /path/to/my/mavenrepo/io/vertx/vertx-auth-common/5.0.0.CR4/vertx-auth-common-5.0.0.CR4.jar )
+[INFO]  -> module: info.picocli ( /path/to/my/mavenrepo/info/picocli/picocli/4.7.4/picocli-4.7.4.jar )
+[INFO]  -> module: io.vertx.howtos.jlink ( /path/to/my/Projects/vertx-howtos/jlink-howto/target/classes )
+[INFO]  -> module: io.netty.transport.unix.common ( /path/to/my/mavenrepo/io/netty/netty-transport-native-unix-common/4.2.0.RC1/netty-transport-native-unix-common-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec.compression ( /path/to/my/mavenrepo/io/netty/netty-codec-compression/4.2.0.RC1/netty-codec-compression-4.2.0.RC1.jar )
+[INFO]  -> module: io.vertx.web.common ( /path/to/my/mavenrepo/io/vertx/vertx-web-common/5.0.0.CR4/vertx-web-common-5.0.0.CR4.jar )
+[INFO]  -> module: io.netty.buffer ( /path/to/my/mavenrepo/io/netty/netty-buffer/4.2.0.RC1/netty-buffer-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec.http2 ( /path/to/my/mavenrepo/io/netty/netty-codec-http2/4.2.0.RC1/netty-codec-http2-4.2.0.RC1.jar )
+[INFO]  -> module: io.vertx.core.logging ( /path/to/my/mavenrepo/io/vertx/vertx-core-logging/5.0.0.CR4/vertx-core-logging-5.0.0.CR4.jar )
+[INFO]  -> module: io.netty.common ( /path/to/my/mavenrepo/io/netty/netty-common/4.2.0.RC1/netty-common-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.resolver.dns ( /path/to/my/mavenrepo/io/netty/netty-resolver-dns/4.2.0.RC1/netty-resolver-dns-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec.http ( /path/to/my/mavenrepo/io/netty/netty-codec-http/4.2.0.RC1/netty-codec-http-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec.socks ( /path/to/my/mavenrepo/io/netty/netty-codec-socks/4.2.0.RC1/netty-codec-socks-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec.dns ( /path/to/my/mavenrepo/io/netty/netty-codec-dns/4.2.0.RC1/netty-codec-dns-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.transport ( /path/to/my/mavenrepo/io/netty/netty-transport/4.2.0.RC1/netty-transport-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.codec ( /path/to/my/mavenrepo/io/netty/netty-codec-base/4.2.0.RC1/netty-codec-base-4.2.0.RC1.jar )
+[INFO]  -> module: io.netty.resolver ( /path/to/my/mavenrepo/io/netty/netty-resolver/4.2.0.RC1/netty-resolver-4.2.0.RC1.jar )
+[INFO]  -> module: io.vertx.eventbusbridge ( /path/to/my/mavenrepo/io/vertx/vertx-bridge-common/5.0.0.CR4/vertx-bridge-common-5.0.0.CR4.jar )
+[INFO] Building zip: /path/to/my/vertx-howtos/jlink-howto/target/jlink-howto-dist.zip
 ----
 
-== How is the website being published?
+== Running the application
 
-The content first needs to be rendered by Jekyll, then the resulting web site files are being pushed to the repository `gh-pages` branch.
-GitHub pages then exposes the content of the `gh-pages` branch as the website.
+Extract the `target/jlink-howto-dist.zip` archive somewhere on your disk.
+On Linux or other Unix-like systems, you can do this with the following command:
 
-While you could do this manually, we automate the process with GitHub Actions.
-Pushing to the `master` branch triggers a deployment, and a daily cron job is in place.
+[source,bash]
+----
+unzip -d target/jlink-howto target/jlink-howto-dist.zip
+----
 
-== Misc
+Inspect the total size of the custom runtime image folder.
+On Linux or other Unix-like systems, you can do this with the following command:
 
-=== Code style
+[source,bash]
+----
+du -sh target/jlink-howto
+----
 
-There is a `.editorconfig` file in this template repository with the 2-space indentation style that we prefer in Vert.x.
+On my machine, the result is 68 MB.
+In comparison, the total size of the JDK 11 distribution is 312 MB.
 
-In any case, favour readability in samples:
+It's time to give the application a try.
+On Linux or other Unix-like systems, you can do this with the following command:
 
-- do not hesitate to use blank lines,
-- do not over-engineer,
-- use explicit short private methods rather than complicated lambdas expressions.
+[source,bash]
+----
+target/jlink-howto/bin/server
+----
 
-=== Asciidoc style
+You should see something like:
 
-Asciidoc does not enforce any style.
+----
+Feb 03, 2025 6:48:31 PM io.vertx.howtos.jlink.ServerVerticle lambda$start$1
+INFO: HTTP server started on port 8888
+Feb 03, 2025 6:48:31 PM io.vertx.launcher.application.VertxApplication
+INFO: Succeeded in deploying verticle
+----
 
-We recommended that you follow the https://asciidoctor.org/docs/asciidoc-recommended-practices/[Asciidoctor recommended practices], and especially the https://asciidoctor.org/docs/asciidoc-recommended-practices/#one-sentence-per-line["One sentence per line"] rule.
+Now, browse to http://localhost:8888 and verify that a greeting is displayed in the browser.
+
+[NOTE]
+====
+When the launcher script is used, it's not possible to specify VM options (heap size, remote debugging, etc.) as arguments.
+Instead, you can configure VM options in the `JLINK_VM_OPTIONS` environment variable.
+====
+
+== Summary
+
+This document covered:
+
+. creating a modular Vert.x Web application,
+. assembling a custom runtime image with jlink.
+
+== See also
+
+* The https://vertx.io/docs/guides/modular-vertx-guide/[Modular Vert.x Guide]

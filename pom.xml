@@ -52,7 +52,7 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jlink-plugin</artifactId>
+        <artifactId>maven-jlink-plugin</artifactId> <!--1-->
         <version>3.2.0</version>
         <executions>
           <execution>
@@ -63,9 +63,9 @@
           </execution>
         </executions>
         <configuration>
-          <classifier>dist</classifier> <!-- 1 -->
-          <launcher>server=io.vertx.howtos.jlink/io.vertx.howtos.jlink.CustomLauncher</launcher> <!-- 2 -->
-          <addModules>jdk.jdwp.agent</addModules> <!-- 3 -->
+          <classifier>dist</classifier> <!--2-->
+          <launcher>server=io.vertx.howtos.jlink/io.vertx.howtos.jlink.CustomLauncher</launcher> <!--3-->
+          <addModules>jdk.jdwp.agent</addModules> <!--4-->
         </configuration>
       </plugin>
     </plugins>
