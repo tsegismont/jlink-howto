@@ -172,7 +172,17 @@ Now, browse to http://localhost:8888 and verify that a greeting is displayed in 
 [NOTE]
 ====
 When the launcher script is used, it's not possible to specify VM options (heap size, remote debugging, etc.) as arguments.
-Instead, you can configure VM options in the `JLINK_VM_OPTIONS` environment variable.
+
+You can either change the `JLINK_VM_OPTIONS` variable in the `server` script or use the `java` command.
+
+For example, for remote debugging on Linux or other Unix-like systems:
+
+[source,bash]
+----
+target/jlink-howto/bin/java \
+  -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 \
+  --module io.vertx.howtos.jlink/io.vertx.howtos.jlink.CustomLauncher
+----
 ====
 
 == Summary
