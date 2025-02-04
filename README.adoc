@@ -148,6 +148,13 @@ On Linux or other Unix-like systems, you can do this with the following command:
 
 [source,bash]
 ----
+target/jlink-howto/bin/java --module io.vertx.howtos.jlink/io.vertx.howtos.jlink.CustomLauncher
+----
+
+Or, you can use the generated `server` script:
+
+[source,bash]
+----
 target/jlink-howto/bin/server
 ----
 
