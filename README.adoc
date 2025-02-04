@@ -1,4 +1,4 @@
-= Assembling a custom runtime image with jlink
+= Assembling a small runtime image of a modular Vert.x application with jlink
 :page-permalink: /
 :page-github: vertx-howtos/jlink-howto
 
@@ -6,7 +6,7 @@ ifdef::env-github[]
 image:https://github.com/vertx-howtos/jlink-howto/workflows/Publish%20the%20how-to/badge.svg["Build Status",link="https://github.com/vertx-howtos/jlink-howto/actions?query=workflow%3A%22Publish+the+how-to%22"]
 endif::env-github[]
 
-This document will show you how to assemble a custom runtime image with jlink and Maven.
+This document will show you how to assemble a small runtime image of a modular Vert.x application with jlink.
 
 == What you need
 
@@ -15,7 +15,7 @@ This document will show you how to assemble a custom runtime image with jlink an
 
 == Create a project
 
-Here is the content of the `pom.xml` file you should be using:
+Here is the content of the Maven `pom.xml` file you should be using:
 
 ifdef::env-github[]
 link:pom.xml[Maven POM file]
@@ -83,7 +83,7 @@ On Linux or other Unix-like systems, run the following command:
 ./mvnw clean package
 ----
 
-On Microsof Windows:
+On Microsoft Windows:
 
 [source,shell]
 ----
